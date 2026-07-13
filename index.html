@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1411">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+body{margin:0;background:#070b09 radial-gradient(900px 500px at 50% -100px,rgba(127,232,168,.06),transparent 70%) no-repeat;font-family:'Space Grotesk',sans-serif;-webkit-tap-highlight-color:transparent}
+button{touch-action:manipulation}
+::-webkit-scrollbar{width:0;height:0}
+a{color:#7fe8a8;text-decoration:none}a:hover{color:#a5f2c3}
+input,select,textarea{font-family:'Space Grotesk',sans-serif;outline:none;font-size:16px !important}
+input:focus,select:focus,textarea:focus{border-color:#7fe8a8 !important}
+@keyframes yaPing{0%{transform:scale(1);opacity:.9}70%{transform:scale(3.2);opacity:0}100%{transform:scale(3.2);opacity:0}}
+@keyframes yaRadar{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes yaBlink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes yaPulse{0%,100%{box-shadow:0 0 0 0 rgba(127,232,168,.45)}50%{box-shadow:0 0 16px 3px rgba(127,232,168,.5)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.leaflet-container{background:#0a120e;font-family:'Space Grotesk',sans-serif}
+.leaflet-popup-content-wrapper{background:#13201a;color:#e8efe9;border:1px solid #2a3a32;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.leaflet-popup-tip{background:#13201a;border:1px solid #2a3a32}
+.leaflet-popup-content{font:400 12px/1.5 'Space Grotesk',sans-serif;margin:10px 14px}
+.leaflet-bar a{background:#13201a;color:#e8efe9;border-bottom:1px solid #2a3a32}
+.leaflet-bar a:hover{background:#1a2b22;color:#7fe8a8}
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#0d1411"/><circle cx="50" cy="50" r="16" fill="none" stroke="#7fe8a8" stroke-width="2.5"/><circle cx="50" cy="50" r="4" fill="#7fe8a8"/><circle cx="62" cy="41" r="2.5" fill="#7fe8a8"/><circle cx="39" cy="57" r="2.5" fill="#7fe8a8"/></svg>
+</template>
+<div style="min-height:100dvh;background:#070b09;display:flex;justify-content:center">
+<div style="width:100%;max-width:{{ shellMax }};background:#0d1411;min-height:100dvh;position:relative;display:flex;flex-direction:column;color:#e8efe9;box-shadow:0 0 60px rgba(0,0,0,.6);border-left:1px solid #131d17;border-right:1px solid #131d17;transition:max-width .3s ease">
+
+<!-- ===================== DEMO ROLE BAR ===================== -->
+<div style="display:flex;gap:6px;align-items:center;padding:8px 14px;background:#070b09;border-bottom:1px solid #16211b;position:sticky;top:0;z-index:60">
+  <span style="font:700 8.5px 'Space Grotesk';letter-spacing:.18em;color:#4d6156">DEMO — VIEW AS</span>
+  <div style="display:flex;gap:4px;margin-left:auto">
+    <button onClick="{{ goHomeDemo }}" style="font:600 {{ demoBtnFont }} 'Space Grotesk';color:{{ demoVisitorColor }};background:{{ demoVisitorBg }};border:1px solid #22322a;border-radius:999px;padding:{{ demoBtnPad }};cursor:pointer">Visitor</button>
+    <button onClick="{{ goStatusDemo }}" style="font:600 {{ demoBtnFont }} 'Space Grotesk';color:{{ demoApplicantColor }};background:{{ demoApplicantBg }};border:1px solid #22322a;border-radius:999px;padding:{{ demoBtnPad }};cursor:pointer">Applicant</button>
+    <button onClick="{{ goDashDemo }}" style="font:600 {{ demoBtnFont }} 'Space Grotesk';color:{{ demoAmbColor }};background:{{ demoAmbBg }};border:1px solid #22322a;border-radius:999px;padding:{{ demoBtnPad }};cursor:pointer">Ambassador</button>
+    <button onClick="{{ goAdminDemo }}" style="font:600 {{ demoBtnFont }} 'Space Grotesk';color:{{ demoAdminColor }};background:{{ demoAdminBg }};border:1px solid #22322a;border-radius:999px;padding:{{ demoBtnPad }};cursor:pointer">Admin</button>
+  </div>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:{{ contentDir }};overflow:hidden;position:relative">
+
+<!-- ===================== SIDE RAIL (desktop, ambassador) ===================== -->
+<sc-if value="{{ showRail }}" hint-placeholder-val="{{ false }}">
+<div style="width:216px;flex:none;border-right:1px solid #1e2a24;background:#0b100d;display:flex;flex-direction:column;padding:18px 12px">
+  <div style="display:flex;align-items:center;gap:9px;padding:4px 10px 18px">
+    <img src="assets/ya-mark.png" alt="SBL YA" style="display:block;width:28px;height:auto">
+    <span style="font:600 13px 'Space Grotesk';letter-spacing:.03em">SBL·YA</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <button onClick="{{ goDash }}" style="display:flex;align-items:center;gap:10px;background:{{ railDashBg }};border:none;cursor:pointer;color:{{ navDashColor }};padding:11px 12px;border-radius:10px;text-align:left"><span style="font-size:15px">⌂</span><span style="font:600 13px 'Space Grotesk'">Home</span></button>
+    <button onClick="{{ goLog }}" style="display:flex;align-items:center;gap:10px;background:{{ railLogBg }};border:none;cursor:pointer;color:{{ navLogColor }};padding:11px 12px;border-radius:10px;text-align:left"><span style="font-size:15px">✦</span><span style="font:600 13px 'Space Grotesk'">Log activity</span></button>
+    <button onClick="{{ goBoard }}" style="display:flex;align-items:center;gap:10px;background:{{ railBoardBg }};border:none;cursor:pointer;color:{{ navBoardColor }};padding:11px 12px;border-radius:10px;text-align:left"><span style="font-size:15px">≡</span><span style="font:600 13px 'Space Grotesk'">Leaderboard</span></button>
+    <button onClick="{{ goRewards }}" style="display:flex;align-items:center;gap:10px;background:{{ railRewBg }};border:none;cursor:pointer;color:{{ navRewColor }};padding:11px 12px;border-radius:10px;text-align:left"><span style="font-size:15px">◎</span><span style="font:600 13px 'Space Grotesk'">Rewards</span></button>
+  </div>
+  <div style="margin-top:auto;padding:12px 10px;font:400 10px/1.5 'Space Grotesk';color:#4d6156">© Startup Bangladesh Limited</div>
+</div>
+</sc-if>
+
+<!-- ===================== HOME (PUBLIC) ===================== -->
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Home (public)" style="flex:1;overflow-y:auto;overscroll-behavior:contain">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:{{ headerPad }};position:sticky;top:0;background:rgba(13,20,17,.88);backdrop-filter:blur(10px);z-index:20;border-bottom:1px solid #1e2a24">
+    <div style="display:flex;align-items:center;gap:9px">
+      <img src="assets/ya-mark.png" alt="SBL YA" style="display:block;width:30px;height:auto">
+      <span style="font:600 13px 'Space Grotesk';letter-spacing:.03em">SBL·YA</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onClick="{{ goStatus }}" style="font:500 12px 'Space Grotesk';color:#8fa398;background:none;border:none;padding:8px 6px;cursor:pointer">Sign in</button>
+      <button onClick="{{ goApply }}" style="font:600 12px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:8px 14px;border-radius:8px;border:none;cursor:pointer">Apply</button>
+    </div>
+  </div>
+
+  <!-- MAP-FIRST HERO: the world map IS the homepage -->
+  <div style="position:relative;height:{{ mapHeight }};overflow:hidden;background:#0a120e">
+    <div id="yaMap" style="position:absolute;inset:0;z-index:1"></div>
+    <div style="position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(13,20,17,.7) 0%,rgba(13,20,17,.12) 30%,rgba(13,20,17,.18) 52%,rgba(13,20,17,.93) 80%,#0d1411 100%)"></div>
+    <div style="position:absolute;left:0;right:0;top:12px;z-index:3;pointer-events:none;display:flex;justify-content:center">
+      <span style="display:inline-flex;gap:7px;align-items:center;font:500 10px ui-monospace,monospace;letter-spacing:.06em;color:#7fe8a8;background:rgba(10,18,14,.75);border:1px solid #2f4238;padding:6px 13px;border-radius:999px;backdrop-filter:blur(6px)"><span style="width:6px;height:6px;border-radius:50%;background:#7fe8a8;animation:yaBlink 1.4s step-end infinite"></span>LIVE · 214 AMBASSADORS · 38 COUNTRIES</span>
+    </div>
+    <div id="yaMapHint" style="position:absolute;right:14px;top:46%;z-index:3;pointer-events:none;font:500 9.5px ui-monospace,monospace;color:rgba(143,163,152,.75);background:rgba(10,18,14,.6);padding:4px 9px;border-radius:6px;backdrop-filter:blur(4px)">drag · tap a pin</div>
+    <div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:{{ heroOverlayPad }};pointer-events:none">
+      <div style="font:500 11px ui-monospace,monospace;color:#9fb3a8;margin-bottom:10px;animation:fadeUp .6s both">$ ya --join cohort-2026</div>
+      <div style="font:700 {{ heroTitleSize }}/1.1 'Space Grotesk';letter-spacing:-.02em;text-shadow:0 2px 28px rgba(0,0,0,.7);animation:fadeUp .7s .15s both">The global signal layer for <span style="color:#7fe8a8">Bangladesh's startups</span></div>
+      <p style="font:400 13.5px/1.6 'Space Grotesk';color:#b8c5bd;margin:12px 0 18px;max-width:340px;text-shadow:0 1px 12px rgba(0,0,0,.7);animation:fadeUp .7s .3s both">Route capital, mentorship and market access back home — from wherever you are.</p>
+      <div style="display:flex;flex-direction:{{ heroBtnDir }};gap:10px;pointer-events:auto;animation:fadeUp .7s .45s both">
+        <button onClick="{{ goApply }}" style="font:600 14px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:13px 20px;border-radius:10px;border:none;cursor:pointer;animation:yaPulse 2.6s ease-in-out infinite">Become an ambassador</button>
+        <button onClick="{{ goStatus }}" style="font:500 14px 'Space Grotesk';color:#e8efe9;padding:13px 16px;border:1px solid #3a5245;border-radius:10px;background:rgba(10,18,14,.6);backdrop-filter:blur(6px);cursor:pointer">Sign in</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE TERMINAL STRIP -->
+  <div style="border-bottom:1px solid #1e2a24;background:#0a120e;padding:11px 16px;display:flex;gap:9px;align-items:center;overflow:hidden">
+    <span style="font:700 9px ui-monospace,monospace;letter-spacing:.14em;color:#4d6156;flex:none">TAIL&nbsp;-F</span>
+    <span id="yaTerm" style="font:500 11px ui-monospace,monospace;color:#8fd7ab;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0"></span>
+    <span style="display:inline-block;width:7px;height:13px;background:#7fe8a8;animation:yaBlink 1s step-end infinite;flex:none"></span>
+  </div>
+
+  <div>
+    <div style="display:grid;grid-template-columns:{{ statsGridCols }};border-bottom:1px solid #1e2a24">
+      <div style="padding:14px;text-align:center;border-right:1px solid #2a3a32"><div style="font:700 19px 'Space Grotesk';color:#7fe8a8"><span data-count="1.2" data-suffix="M+">1.2M+</span></div><div style="font:500 9.5px 'Space Grotesk';color:#6f8578;letter-spacing:.08em">JOBS</div></div>
+      <div style="padding:14px;text-align:center;border-right:1px solid #2a3a32"><div style="font:700 19px 'Space Grotesk';color:#7fe8a8"><span data-count="940" data-prefix="$" data-suffix="M">$940M</span></div><div style="font:500 9.5px 'Space Grotesk';color:#6f8578;letter-spacing:.08em">FDI RAISED</div></div>
+      <div style="padding:14px;text-align:center"><div style="font:700 19px 'Space Grotesk';color:#7fe8a8"><span data-count="214">214</span></div><div style="font:500 9.5px 'Space Grotesk';color:#6f8578;letter-spacing:.08em">AMBASSADORS</div></div>
+    </div>
+  </div>
+
+  <!-- LIVE FEED -->
+  <div style="padding:{{ liveFeedPad }}">
+    <div style="font:600 11px 'Space Grotesk';letter-spacing:.16em;color:#6f8578;margin-bottom:12px">LIVE FROM THE NETWORK</div>
+    <div style="display:grid;grid-template-columns:{{ feedCols }};gap:9px">
+    <sc-for list="{{ feed }}" as="f" hint-placeholder-count="3">
+      <div style="border:1px solid #2a3a32;border-radius:14px;padding:13px 15px;background:#101a15">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;gap:10px"><span style="font:600 12px 'Space Grotesk'">{{ f.route }}</span><span style="font:500 10px ui-monospace,monospace;color:#7fe8a8;white-space:nowrap">{{ f.tag }}</span></div>
+        <div style="font:400 11.5px/1.5 'Space Grotesk';color:#8fa398">{{ f.text }}</div>
+      </div>
+    </sc-for>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div style="padding:{{ howPad }}">
+    <div style="font:600 11px 'Space Grotesk';letter-spacing:.16em;color:#6f8578;margin-bottom:14px">HOW IT WORKS</div>
+    <div style="display:grid;grid-template-columns:{{ howCols }};gap:10px">
+      <div style="border:1px solid #2a3a32;border-radius:14px;padding:14px;background:#101a15">
+        <div style="font:700 13px 'Space Grotesk';color:#7fe8a8;margin-bottom:5px">01 / Apply</div>
+        <div style="font:400 11.5px/1.5 'Space Grotesk';color:#8fa398">Profile, achievements &amp; CV via the platform.</div>
+      </div>
+      <div style="border:1px solid #2a3a32;border-radius:14px;padding:14px;background:#101a15">
+        <div style="font:700 13px 'Space Grotesk';color:#7fe8a8;margin-bottom:5px">02 / Select</div>
+        <div style="font:400 11.5px/1.5 'Space Grotesk';color:#8fa398">Merit-scored review by SBL committee.</div>
+      </div>
+      <div style="border:1px solid #2a3a32;border-radius:14px;padding:14px;background:#101a15">
+        <div style="font:700 13px 'Space Grotesk';color:#7fe8a8;margin-bottom:5px">03 / Contribute</div>
+        <div style="font:400 11.5px/1.5 'Space Grotesk';color:#8fa398">Intros, content, events — logged &amp; scored.</div>
+      </div>
+      <div style="border:1px solid #2a3a32;border-radius:14px;padding:14px;background:#101a15">
+        <div style="font:700 13px 'Space Grotesk';color:#7fe8a8;margin-bottom:5px">04 / Reward</div>
+        <div style="font:400 11.5px/1.5 'Space Grotesk';color:#8fa398">Bronze → Regional Lead. Real-world perks.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div style="margin:{{ ctaMargin }};border:1px solid #2f4238;border-radius:16px;padding:24px;background:linear-gradient(160deg,#13201a,#0f1813);text-align:center">
+    <img src="assets/ya-mark.png" alt="" style="width:44px;height:auto;margin:0 auto 10px;display:block">
+    <div style="font:700 20px/1.25 'Space Grotesk'">Your city isn't on the map yet?</div>
+    <div style="font:400 13px 'Space Grotesk';color:#8fa398;margin:6px 0 16px">Claim the pin. Represent Bangladesh where you are.</div>
+    <button onClick="{{ goApply }}" style="font:600 14px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:13px 24px;border-radius:10px;border:none;cursor:pointer">Apply for Cohort 2026</button>
+  </div>
+  <div style="padding:0 {{ sectionPad }} 28px;display:flex;flex-direction:{{ footerDir }};justify-content:{{ footerAlign }};align-items:{{ footerAlign }};gap:8px;font:400 11px 'Space Grotesk';color:#4d6156">
+    <span>© Startup Bangladesh Limited · ICT Division</span>
+    <span>About · Contact</span>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== APPLY ===================== -->
+<sc-if value="{{ isApply }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Apply" style="flex:1;overflow-y:auto;width:100%;max-width:{{ formMax }};margin:0 auto">
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #1e2a24;position:sticky;top:0;background:rgba(13,20,17,.9);backdrop-filter:blur(10px);z-index:20">
+    <button onClick="{{ goHome }}" style="font:500 18px 'Space Grotesk';color:#8fa398;background:none;border:none;cursor:pointer;padding:2px 6px">←</button>
+    <span style="font:600 14px 'Space Grotesk'">Apply — Cohort 2026</span>
+  </div>
+  <div style="padding:24px 22px 40px">
+    <div style="display:flex;gap:6px;margin-bottom:22px">
+      <div style="flex:1;height:4px;border-radius:2px;background:#7fe8a8"></div>
+      <div style="flex:1;height:4px;border-radius:2px;background:{{ applyBar2 }}"></div>
+    </div>
+
+    <sc-if value="{{ isApplyStep1 }}" hint-placeholder-val="{{ true }}">
+      <div style="font:700 22px 'Space Grotesk';margin-bottom:6px">Create your account</div>
+      <div style="font:400 13px/1.5 'Space Grotesk';color:#8fa398;margin-bottom:22px">Step 1 of 2 — you'll use this to track your application.</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">USERNAME</div>
+        <input name="username" onInput="{{ onForm }}" placeholder="e.g. nadia.r" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+        <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">PASSWORD</div>
+        <input type="password" name="password" onInput="{{ onForm }}" placeholder="8+ characters" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+      </div>
+      <button onClick="{{ applyNext }}" style="width:100%;margin-top:24px;font:600 14px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:15px;border-radius:10px;border:none;cursor:pointer">Next →</button>
+    </sc-if>
+
+    <sc-if value="{{ isApplyStep2 }}" hint-placeholder-val="{{ false }}">
+      <div style="font:700 22px 'Space Grotesk';margin-bottom:6px">Your profile</div>
+      <div style="font:400 13px/1.5 'Space Grotesk';color:#8fa398;margin-bottom:22px">Step 2 of 2 — this powers the merit-based review.</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">FULL NAME *</div>
+        <input name="name" onInput="{{ onForm }}" placeholder="Full name" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+        <div style="display:grid;grid-template-columns:{{ formGridCols }};gap:12px">
+          <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">AGE *</div>
+          <input name="age" onInput="{{ onForm }}" placeholder="18–35" inputMode="numeric" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+          <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">GENDER</div>
+          <select name="gender" onChange="{{ onForm }}" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 10px;color:#e8efe9;font-size:14px"><option>Prefer not to say</option><option>Female</option><option>Male</option><option>Other</option></select></div>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ formGridCols }};gap:12px">
+          <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">PHONE *</div>
+          <input name="phone" onInput="{{ onForm }}" placeholder="+880…" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+          <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">EMAIL *</div>
+          <input name="email" onInput="{{ onForm }}" placeholder="you@mail.com" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+        </div>
+        <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">UNIVERSITY / INSTITUTION *</div>
+        <input name="university" onInput="{{ onForm }}" placeholder="e.g. University of Toronto" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+        <div style="display:grid;grid-template-columns:{{ formGridCols }};gap:12px">
+          <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">ACADEMIC YEAR</div>
+          <select name="year" onChange="{{ onForm }}" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 10px;color:#e8efe9;font-size:14px"><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option><option>Graduate</option><option>Professional</option></select></div>
+          <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">CGPA</div>
+          <input name="cgpa" onInput="{{ onForm }}" placeholder="e.g. 3.8" inputMode="decimal" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ formGridCols }};gap:12px">
+          <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">CITY &amp; COUNTRY *</div>
+          <input name="country" onInput="{{ onForm }}" placeholder="Toronto, Canada" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px"></div>
+          <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">NATIONALITY *</div>
+          <select name="nationality" onChange="{{ onForm }}" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 10px;color:#e8efe9;font-size:14px"><option>Bangladeshi</option><option>Bangladeshi (NRB)</option><option>Dual citizen</option></select></div>
+        </div>
+        <div><div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">ACHIEVEMENTS</div>
+        <textarea name="achievements" onInput="{{ onForm }}" placeholder="Awards, leadership roles, communities you run…" rows="3" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px;resize:vertical"></textarea></div>
+        <div>
+          <div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">CV UPLOAD *</div>
+          <button onClick="{{ fakeCv }}" style="width:100%;background:#101a15;border:1px dashed #3a5245;border-radius:10px;padding:18px 14px;color:{{ cvColor }};font:500 13px 'Space Grotesk';cursor:pointer">{{ cvLabel }}</button>
+          <div style="font:400 10.5px 'Space Grotesk';color:#4d6156;margin-top:5px">PDF or DOCX · max 5 MB</div>
+        </div>
+      </div>
+      <button onClick="{{ applySubmit }}" style="width:100%;margin-top:24px;font:600 14px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:15px;border-radius:10px;border:none;cursor:pointer">Submit application</button>
+      <div style="font:400 11px/1.5 'Space Grotesk';color:#4d6156;text-align:center;margin-top:10px">Fields marked * are required. You'll get an email confirmation.</div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== APPLIED CONFIRMATION ===================== -->
+<sc-if value="{{ isApplied }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Application submitted" style="flex:1;width:100%;max-width:{{ formMax }};margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 30px;text-align:center">
+  <div style="width:72px;height:72px;border-radius:50%;background:rgba(127,232,168,.12);border:1px solid #2f4238;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:18px;animation:yaPulse 2.4s ease-in-out infinite">✓</div>
+  <div style="font:700 24px 'Space Grotesk';margin-bottom:8px">Application received</div>
+  <div style="font:400 13.5px/1.6 'Space Grotesk';color:#8fa398;max-width:300px">Thanks, {{ applicantName }}. A confirmation email is on its way. You can track your status any time.</div>
+  <button onClick="{{ goStatus }}" style="margin-top:24px;font:600 14px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:14px 24px;border-radius:10px;border:none;cursor:pointer">Track my application →</button>
+</div>
+</sc-if>
+
+<!-- ===================== STATUS TRACKER ===================== -->
+<sc-if value="{{ isStatus }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Application status" style="flex:1;overflow-y:auto;width:100%;max-width:{{ formMax }};margin:0 auto">
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #1e2a24;position:sticky;top:0;background:rgba(13,20,17,.9);backdrop-filter:blur(10px);z-index:20">
+    <button onClick="{{ goHome }}" style="font:500 18px 'Space Grotesk';color:#8fa398;background:none;border:none;cursor:pointer;padding:2px 6px">←</button>
+    <span style="font:600 14px 'Space Grotesk'">My application</span>
+    <span style="margin-left:auto;font:500 10px ui-monospace,monospace;color:#7fe8a8;border:1px solid #2f4238;padding:4px 9px;border-radius:999px">{{ statusPill }}</span>
+  </div>
+  <div style="padding:26px 22px 40px">
+    <div style="border:1px solid #2a3a32;border-radius:16px;background:#101a15;padding:20px;margin-bottom:20px">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:4px">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#7fe8a8,#4fb8d1);color:#0d1411;display:flex;align-items:center;justify-content:center;font:700 18px 'Space Grotesk'">{{ applicantInitial }}</div>
+        <div><div style="font:600 15px 'Space Grotesk'">{{ applicantName }}</div><div style="font:400 11.5px 'Space Grotesk';color:#6f8578">{{ applicantMeta }}</div></div>
+      </div>
+    </div>
+    <div style="font:600 11px 'Space Grotesk';letter-spacing:.16em;color:#6f8578;margin-bottom:14px">SELECTION PIPELINE</div>
+    <sc-for list="{{ statusSteps }}" as="s" hint-placeholder-count="4">
+      <div style="display:flex;gap:14px">
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div style="width:26px;height:26px;border-radius:50%;background:{{ s.dotBg }};border:1px solid {{ s.dotBorder }};color:{{ s.dotColor }};display:flex;align-items:center;justify-content:center;font:700 12px 'Space Grotesk';flex:none">{{ s.mark }}</div>
+          <div style="width:1px;flex:1;background:#2a3a32;min-height:26px;display:{{ s.lineDisplay }}"></div>
+        </div>
+        <div style="padding:2px 0 20px">
+          <div style="font:600 13.5px 'Space Grotesk';color:{{ s.titleColor }}">{{ s.title }}</div>
+          <div style="font:400 11.5px/1.5 'Space Grotesk';color:#6f8578;margin-top:2px">{{ s.sub }}</div>
+        </div>
+      </div>
+    </sc-for>
+    <sc-if value="{{ isSelected }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid #2f4238;border-radius:16px;padding:20px;background:linear-gradient(160deg,#13201a,#0f1813);text-align:center;margin-top:6px">
+        <div style="font:700 18px 'Space Grotesk';color:#7fe8a8;margin-bottom:4px">You're in. 🎉</div>
+        <div style="font:400 12.5px/1.5 'Space Grotesk';color:#8fa398;margin-bottom:14px">Your pin just went live on the world map. Complete onboarding to unlock your dashboard.</div>
+        <button onClick="{{ goOnboard }}" style="font:600 13px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:12px 20px;border-radius:10px;border:none;cursor:pointer">Start onboarding →</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ notSelected }}" hint-placeholder-val="{{ true }}">
+      <div style="border:1px dashed #2a3a32;border-radius:12px;padding:14px;font:400 11.5px/1.5 'Space Grotesk';color:#6f8578;margin-top:6px">Status changes trigger an email + in-app notification. <button onClick="{{ advanceStatus }}" style="font:600 11px 'Space Grotesk';color:#7fe8a8;background:none;border:1px solid #2f4238;border-radius:999px;padding:4px 10px;cursor:pointer;margin-left:6px">▸ Simulate review step</button></div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== ONBOARDING ===================== -->
+<sc-if value="{{ isOnboard }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Onboarding" style="flex:1;overflow-y:auto;width:100%;max-width:{{ formMax }};margin:0 auto">
+  <div style="padding:34px 22px 20px;text-align:center">
+    <img src="assets/ya-mark.png" alt="" style="width:54px;height:auto;display:block;margin:0 auto 12px">
+    <div style="font:700 24px 'Space Grotesk'">Welcome, Ambassador.</div>
+    <div style="font:400 13px/1.6 'Space Grotesk';color:#8fa398;margin-top:6px;max-width:300px;margin-left:auto;margin-right:auto">Three steps to unlock your dashboard and earn your starter badge.</div>
+  </div>
+  <div style="padding:6px 22px 30px">
+    <div style="display:flex;justify-content:space-between;font:600 11px 'Space Grotesk';color:#6f8578;margin-bottom:8px"><span>SETUP</span><span style="color:#7fe8a8">{{ onboardPct }}%</span></div>
+    <div style="height:8px;border-radius:4px;background:#1e2a24;overflow:hidden;margin-bottom:22px"><div style="width:{{ onboardPctW }};height:8px;background:linear-gradient(90deg,#7fe8a8,#4fb8d1);transition:width .5s cubic-bezier(.2,.7,.2,1)"></div></div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:12px;align-items:center;border:1px solid #2f4238;border-radius:14px;padding:14px;background:#101a15">
+        <div style="width:30px;height:30px;border-radius:50%;background:rgba(127,232,168,.15);border:1px solid #2f4238;color:#7fe8a8;display:flex;align-items:center;justify-content:center;font:700 13px 'Space Grotesk';flex:none">✓</div>
+        <div style="flex:1"><div style="font:600 13px 'Space Grotesk'">Complete your profile</div><div style="font:400 11px 'Space Grotesk';color:#6f8578">Imported from your application</div></div>
+      </div>
+      <button onClick="{{ ackCoc }}" style="display:flex;gap:12px;align-items:center;border:1px solid {{ cocBorder }};border-radius:14px;padding:14px;background:#101a15;cursor:pointer;text-align:left;width:100%">
+        <div style="width:30px;height:30px;border-radius:50%;background:{{ cocDotBg }};border:1px solid {{ cocBorder }};color:{{ cocDotColor }};display:flex;align-items:center;justify-content:center;font:700 13px 'Space Grotesk';flex:none">{{ cocMark }}</div>
+        <div style="flex:1"><div style="font:600 13px 'Space Grotesk';color:#e8efe9">Acknowledge the Code of Conduct</div><div style="font:400 11px 'Space Grotesk';color:#6f8578">Ethics, representation &amp; confidentiality</div></div>
+        <span style="font:500 11px 'Space Grotesk';color:#7fe8a8">{{ cocAction }}</span>
+      </button>
+      <button onClick="{{ joinWa }}" style="display:flex;gap:12px;align-items:center;border:1px solid {{ waBorder }};border-radius:14px;padding:14px;background:#101a15;cursor:pointer;text-align:left;width:100%">
+        <div style="width:30px;height:30px;border-radius:50%;background:{{ waDotBg }};border:1px solid {{ waBorder }};color:{{ waDotColor }};display:flex;align-items:center;justify-content:center;font:700 13px 'Space Grotesk';flex:none">{{ waMark }}</div>
+        <div style="flex:1"><div style="font:600 13px 'Space Grotesk';color:#e8efe9">Join the community channel</div><div style="font:400 11px 'Space Grotesk';color:#6f8578">WhatsApp — announcements &amp; peers</div></div>
+        <span style="font:500 11px 'Space Grotesk';color:#7fe8a8">{{ waAction }}</span>
+      </button>
+    </div>
+
+    <button onClick="{{ finishOnboard }}" disabled="{{ onboardLocked }}" style="width:100%;margin-top:24px;font:600 14px 'Space Grotesk';color:{{ onboardBtnColor }};background:{{ onboardBtnBg }};padding:15px;border-radius:10px;border:none;cursor:pointer;transition:all .3s">{{ onboardBtnLabel }}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== DASHBOARD ===================== -->
+<sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Dashboard" style="flex:1;overflow-y:auto;padding-bottom:8px;width:100%;max-width:{{ appMax }};margin:0 auto">
+  <div style="padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;gap:11px;align-items:center">
+      <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7fe8a8,#4fb8d1);color:#0d1411;display:flex;align-items:center;justify-content:center;font:700 17px 'Space Grotesk'">{{ applicantInitial }}</div>
+      <div><div style="font:600 14.5px 'Space Grotesk'">{{ applicantName }}</div><div style="font:400 11px 'Space Grotesk';color:#6f8578">{{ applicantMeta }}</div></div>
+    </div>
+    <button onClick="{{ toggleNotif }}" style="width:36px;height:36px;border-radius:10px;border:1px solid #2a3a32;background:#101a15;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer">
+      <span style="font-size:14px;color:#8fa398">◷</span>
+      <sc-if value="{{ hasNotifs }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;border-radius:8px;background:#d16a4f;color:#fff;font:700 9px 'Space Grotesk';display:flex;align-items:center;justify-content:center;padding:0 3px">{{ notifCount }}</span></sc-if>
+    </button>
+  </div>
+
+  <div style="margin:14px 20px;border:1px solid #2a3a32;border-radius:18px;padding:18px;background:linear-gradient(160deg,#13201a,#101a15)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font:700 12px 'Space Grotesk';color:#cfd9d2;letter-spacing:.1em">{{ rankUpper }}</span>
+        <span style="font:500 10px 'Space Grotesk';color:#6f8578">→ {{ nextRankUpper }}</span>
+      </div>
+      <span style="font:600 11px 'Space Grotesk';color:#7fe8a8">#{{ myRank }} / 214</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font:500 11px 'Space Grotesk';color:#8fa398;margin-bottom:7px"><span>{{ xp }} XP</span><span>{{ xpToNext }} to next rank</span></div>
+    <div style="height:8px;border-radius:4px;background:#1e2a24;overflow:hidden"><div style="width:{{ xpPctW }};height:8px;background:linear-gradient(90deg,#7fe8a8,#4fb8d1);transition:width .8s cubic-bezier(.2,.7,.2,1)"></div></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <span style="font:500 10.5px 'Space Grotesk';color:#e8efe9;border:1px solid #2a3a32;padding:5px 10px;border-radius:999px">🔥 {{ streak }}-month streak</span>
+      <span style="font:500 10.5px 'Space Grotesk';color:#e8efe9;border:1px solid #2a3a32;padding:5px 10px;border-radius:999px">{{ approvedCount }} approved</span>
+      <span style="font:500 10.5px 'Space Grotesk';color:#e8efe9;border:1px solid #2a3a32;padding:5px 10px;border-radius:999px">📍 Toronto</span>
+    </div>
+  </div>
+
+  <div style="margin:0 20px 14px;border:1px solid #2a3a32;border-radius:18px;padding:16px;background:#101a15">
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+      <span style="font:600 13px 'Space Grotesk'">Achievements</span><span style="font:500 11px 'Space Grotesk';color:#7fe8a8">{{ badgeCount }}/24</span>
+    </div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap">
+      <sc-for list="{{ badges }}" as="b" hint-placeholder-count="5">
+        <div title="{{ b.name }}" style="width:50px;height:50px;border-radius:13px;background:{{ b.bg }};border:1px solid {{ b.border }};display:flex;align-items:center;justify-content:center;font-size:20px;opacity:{{ b.opacity }}">{{ b.icon }}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="margin:0 20px 18px;border:1px solid #2a3a32;border-radius:18px;background:#101a15;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #1e2a24">
+      <span style="font:600 13px 'Space Grotesk'">Activity ledger</span>
+      <button onClick="{{ goLog }}" style="font:600 11px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:7px 13px;border-radius:8px;border:none;cursor:pointer">+ Log</button>
+    </div>
+    <sc-for list="{{ activityRows }}" as="a" hint-placeholder-count="3">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #16211b;gap:10px">
+        <div style="min-width:0"><div style="font:500 12.5px 'Space Grotesk';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.title }}</div><div style="font:400 10.5px 'Space Grotesk';color:#6f8578">{{ a.meta }}</div></div>
+        <span style="font:600 11px 'Space Grotesk';color:{{ a.tagColor }};border:1px solid {{ a.tagBorder }};padding:4px 9px;border-radius:999px;white-space:nowrap;background:{{ a.tagBg }}">{{ a.tag }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== LOG ACTIVITY ===================== -->
+<sc-if value="{{ isLog }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Log activity" style="flex:1;overflow-y:auto;width:100%;max-width:{{ formMax }};margin:0 auto">
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #1e2a24;position:sticky;top:0;background:rgba(13,20,17,.9);backdrop-filter:blur(10px);z-index:20">
+    <button onClick="{{ goDash }}" style="font:500 18px 'Space Grotesk';color:#8fa398;background:none;border:none;cursor:pointer;padding:2px 6px">←</button>
+    <span style="font:600 14px 'Space Grotesk'">Log an activity</span>
+  </div>
+  <div style="padding:24px 22px 40px">
+    <div style="font:400 12.5px/1.6 'Space Grotesk';color:#8fa398;margin-bottom:20px">Approved activities are scored on <span style="color:#e8efe9">Output</span> and <span style="color:#e8efe9">Impact</span> (High 8–10 · Medium 4–7 · Low 1–3) and award XP.</div>
+    <div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:8px">ACTIVITY TYPE</div>
+    <div style="display:grid;grid-template-columns:{{ actGridCols }};gap:8px;margin-bottom:16px">
+      <sc-for list="{{ actTypes }}" as="t" hint-placeholder-count="4">
+        <button onClick="{{ t.pick }}" style="font:500 12px 'Space Grotesk';color:{{ t.color }};background:{{ t.bg }};border:1px solid {{ t.border }};border-radius:10px;padding:12px 8px;cursor:pointer">{{ t.label }}</button>
+      </sc-for>
+    </div>
+    <div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">DESCRIPTION</div>
+    <textarea name="actDesc" onInput="{{ onForm }}" placeholder="What did you do, with whom, and when?" rows="3" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px;resize:vertical;margin-bottom:16px"></textarea>
+    <div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">IMPACT NOTES</div>
+    <textarea name="actImpact" onInput="{{ onForm }}" placeholder="Measurable outcome — intros made, attendees, reach…" rows="2" style="width:100%;box-sizing:border-box;background:#101a15;border:1px solid #2a3a32;border-radius:10px;padding:13px 14px;color:#e8efe9;font-size:14px;resize:vertical;margin-bottom:16px"></textarea>
+    <div style="font:600 11px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">EVIDENCE</div>
+    <button onClick="{{ fakeEvidence }}" style="width:100%;background:#101a15;border:1px dashed #3a5245;border-radius:10px;padding:16px 14px;color:{{ evColor }};font:500 13px 'Space Grotesk';cursor:pointer;margin-bottom:22px">{{ evLabel }}</button>
+    <button onClick="{{ submitActivity }}" style="width:100%;font:600 14px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:15px;border-radius:10px;border:none;cursor:pointer">Submit for review</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== LEADERBOARD ===================== -->
+<sc-if value="{{ isBoard }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Leaderboard" style="flex:1;overflow-y:auto;padding-bottom:8px;width:100%;max-width:{{ appMax }};margin:0 auto">
+  <div style="padding:18px 20px 12px">
+    <div style="font:700 20px 'Space Grotesk'">Leaderboard</div>
+    <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+      <button onClick="{{ filterAll }}" style="font:600 11px 'Space Grotesk';color:{{ fAllColor }};background:{{ fAllBg }};border:1px solid #2a3a32;border-radius:999px;padding:7px 14px;cursor:pointer">All-time</button>
+      <button onClick="{{ filterMonth }}" style="font:600 11px 'Space Grotesk';color:{{ fMonColor }};background:{{ fMonBg }};border:1px solid #2a3a32;border-radius:999px;padding:7px 14px;cursor:pointer">This month</button>
+      <button onClick="{{ filterRegion }}" style="font:600 11px 'Space Grotesk';color:{{ fRegColor }};background:{{ fRegBg }};border:1px solid #2a3a32;border-radius:999px;padding:7px 14px;cursor:pointer">My region</button>
+    </div>
+  </div>
+  <div style="margin:4px 20px 12px;border:1px solid #2f4238;border-radius:14px;padding:12px 16px;background:linear-gradient(160deg,#13201a,#101a15);display:flex;justify-content:space-between;align-items:center">
+    <span style="font:500 12px 'Space Grotesk';color:#8fa398">Your rank</span>
+    <span style="font:700 14px 'Space Grotesk';color:#7fe8a8">#{{ myRank }} · {{ xpToNext }} XP to {{ nextRankUpper }}</span>
+  </div>
+  <div style="margin:0 20px 20px;border:1px solid #2a3a32;border-radius:18px;background:#101a15;overflow:hidden">
+    <sc-for list="{{ boardRows }}" as="r" hint-placeholder-count="8">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #16211b;background:{{ r.bg }}">
+        <span style="font:700 13px 'Space Grotesk';color:{{ r.rankColor }};width:26px">{{ r.rank }}</span>
+        <div style="width:32px;height:32px;border-radius:9px;background:{{ r.avBg }};color:#0d1411;display:flex;align-items:center;justify-content:center;font:700 13px 'Space Grotesk';flex:none">{{ r.initial }}</div>
+        <div style="flex:1;min-width:0"><div style="font:600 12.5px 'Space Grotesk';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px 'Space Grotesk';color:#6f8578">{{ r.meta }}</div></div>
+        <span style="font:600 12px ui-monospace,monospace;color:{{ r.xpColor }}">{{ r.xp }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== REWARDS ===================== -->
+<sc-if value="{{ isRewards }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Rewards" style="flex:1;overflow-y:auto;padding-bottom:8px;width:100%;max-width:{{ appMax }};margin:0 auto">
+  <div style="padding:18px 20px 8px">
+    <div style="font:700 20px 'Space Grotesk'">Rewards</div>
+    <div style="font:400 12.5px/1.5 'Space Grotesk';color:#8fa398;margin-top:4px">What your rank unlocks — and what's next.</div>
+  </div>
+  <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="4">
+    <div style="margin:12px 20px 0;border:1px solid {{ t.border }};border-radius:18px;background:{{ t.bg }};padding:16px;opacity:{{ t.opacity }}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font:700 13px 'Space Grotesk';letter-spacing:.1em;color:{{ t.nameColor }}">{{ t.name }}</span>
+        <span style="font:500 10.5px 'Space Grotesk';color:{{ t.stateColor }};border:1px solid {{ t.border }};padding:4px 10px;border-radius:999px">{{ t.state }}</span>
+      </div>
+      <sc-for list="{{ t.perks }}" as="p" hint-placeholder-count="3">
+        <div style="display:flex;gap:9px;align-items:baseline;padding:4px 0">
+          <span style="font:600 10px 'Space Grotesk';color:{{ t.nameColor }}">◆</span>
+          <span style="font:400 12.5px/1.5 'Space Grotesk';color:#b8c5bd">{{ p }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-for>
+  <div style="height:24px"></div>
+</div>
+</sc-if>
+
+<!-- ===================== ADMIN ===================== -->
+<sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Admin" style="flex:1;overflow-y:auto;width:100%;max-width:{{ appMax }};margin:0 auto">
+  <div style="padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center">
+    <div><div style="font:700 18px 'Space Grotesk'">Admin console</div><div style="font:400 11px 'Space Grotesk';color:#6f8578">SBL Program Committee</div></div>
+    <span style="font:600 9.5px 'Space Grotesk';letter-spacing:.14em;color:#e8c15a;border:1px solid #4a3f1e;padding:5px 10px;border-radius:999px">INTERNAL</span>
+  </div>
+  <div style="display:flex;gap:6px;padding:14px 20px 4px;flex-wrap:wrap">
+    <button onClick="{{ tabApps }}" style="font:600 12px 'Space Grotesk';color:{{ tAppsColor }};background:{{ tAppsBg }};border:1px solid #2a3a32;border-radius:10px;padding:9px 16px;cursor:pointer">Applications <span style="font:600 10px ui-monospace,monospace;color:#e8c15a">{{ pendingAppCount }}</span></button>
+    <button onClick="{{ tabActs }}" style="font:600 12px 'Space Grotesk';color:{{ tActsColor }};background:{{ tActsBg }};border:1px solid #2a3a32;border-radius:10px;padding:9px 16px;cursor:pointer">Activities <span style="font:600 10px ui-monospace,monospace;color:#e8c15a">{{ pendingActCount }}</span></button>
+  </div>
+
+  <sc-if value="{{ isTabApps }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:12px 20px 30px;display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ applicantRows }}" as="ap" hint-placeholder-count="4">
+        <div style="border:1px solid #2a3a32;border-radius:16px;background:#101a15;padding:14px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+            <div><div style="font:600 13.5px 'Space Grotesk'">{{ ap.name }}</div><div style="font:400 11px 'Space Grotesk';color:#6f8578">{{ ap.meta }}</div></div>
+            <span style="font:600 10px 'Space Grotesk';color:{{ ap.stateColor }};border:1px solid {{ ap.stateBorder }};padding:4px 9px;border-radius:999px;white-space:nowrap">{{ ap.state }}</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+            <span style="font:500 10px ui-monospace,monospace;color:#8fa398;background:#0d1411;border:1px solid #22322a;padding:4px 8px;border-radius:6px">CGPA {{ ap.cgpa }}</span>
+            <span style="font:500 10px ui-monospace,monospace;color:#8fa398;background:#0d1411;border:1px solid #22322a;padding:4px 8px;border-radius:6px">Merit {{ ap.merit }}/10</span>
+            <span style="font:500 10px ui-monospace,monospace;color:#8fa398;background:#0d1411;border:1px solid #22322a;padding:4px 8px;border-radius:6px">CV ↗</span>
+          </div>
+          <sc-if value="{{ ap.pending }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:8px">
+              <button onClick="{{ ap.approve }}" style="flex:1;font:600 12px 'Space Grotesk';color:#0d1411;background:#7fe8a8;border:none;border-radius:9px;padding:10px;cursor:pointer">Approve</button>
+              <button onClick="{{ ap.reject }}" style="flex:1;font:600 12px 'Space Grotesk';color:#d16a4f;background:none;border:1px solid #472a22;border-radius:9px;padding:10px;cursor:pointer">Reject</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isTabActs }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:12px 20px 30px;display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ reviewRows }}" as="rv" hint-placeholder-count="3">
+        <div style="border:1px solid #2a3a32;border-radius:16px;background:#101a15;padding:14px 16px">
+          <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:4px">
+            <div style="font:600 13px 'Space Grotesk'">{{ rv.title }}</div>
+            <span style="font:500 10px ui-monospace,monospace;color:#e8c15a;white-space:nowrap">{{ rv.state }}</span>
+          </div>
+          <div style="font:400 11px 'Space Grotesk';color:#6f8578;margin-bottom:10px">{{ rv.meta }}</div>
+          <sc-if value="{{ rv.pending }}" hint-placeholder-val="{{ true }}">
+            <div style="font:600 10px 'Space Grotesk';letter-spacing:.1em;color:#6f8578;margin-bottom:6px">SCORE (OUTPUT × IMPACT)</div>
+            <div style="display:flex;gap:8px">
+              <button onClick="{{ rv.scoreHigh }}" style="flex:1;font:600 11.5px 'Space Grotesk';color:#7fe8a8;background:rgba(127,232,168,.08);border:1px solid #2f4238;border-radius:9px;padding:9px 4px;cursor:pointer">High · +90</button>
+              <button onClick="{{ rv.scoreMed }}" style="flex:1;font:600 11.5px 'Space Grotesk';color:#e8c15a;background:rgba(232,193,90,.07);border:1px solid #4a3f1e;border-radius:9px;padding:9px 4px;cursor:pointer">Med · +55</button>
+              <button onClick="{{ rv.scoreLow }}" style="flex:1;font:600 11.5px 'Space Grotesk';color:#8fa398;background:none;border:1px solid #2a3a32;border-radius:9px;padding:9px 4px;cursor:pointer">Low · +20</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- ===================== BOTTOM NAV (ambassador) ===================== -->
+<sc-if value="{{ showBottomNav }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;justify-content:space-around;border-top:1px solid #1e2a24;padding:10px 8px calc(12px + env(safe-area-inset-bottom));background:#0b100d;position:sticky;bottom:0;z-index:30">
+  <button onClick="{{ goDash }}" style="background:none;border:none;cursor:pointer;text-align:center;color:{{ navDashColor }};padding:{{ bottomNavPad }};min-height:48px;border-radius:12px"><div style="font-size:16px">⌂</div><div style="font:600 9.5px 'Space Grotesk'">Home</div></button>
+  <button onClick="{{ goLog }}" style="background:none;border:none;cursor:pointer;text-align:center;color:{{ navLogColor }};padding:{{ bottomNavPad }};min-height:48px;border-radius:12px"><div style="font-size:16px">✦</div><div style="font:600 9.5px 'Space Grotesk'">Log</div></button>
+  <button onClick="{{ goBoard }}" style="background:none;border:none;cursor:pointer;text-align:center;color:{{ navBoardColor }};padding:{{ bottomNavPad }};min-height:48px;border-radius:12px"><div style="font-size:16px">≡</div><div style="font:600 9.5px 'Space Grotesk'">Ranks</div></button>
+  <button onClick="{{ goRewards }}" style="background:none;border:none;cursor:pointer;text-align:center;color:{{ navRewColor }};padding:{{ bottomNavPad }};min-height:48px;border-radius:12px"><div style="font-size:16px">◎</div><div style="font:600 9.5px 'Space Grotesk'">Rewards</div></button>
+</div>
+</sc-if>
+
+</div>
+
+<!-- ===================== NOTIFICATIONS OVERLAY ===================== -->
+<sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ toggleNotif }}" style="position:absolute;inset:0;background:rgba(4,7,5,.6);backdrop-filter:blur(3px);z-index:70;display:flex;align-items:flex-start;justify-content:flex-end;padding:54px 14px 0">
+  <div style="width:300px;max-width:88%;background:#101a15;border:1px solid #2a3a32;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:fadeUp .3s both">
+    <div style="padding:13px 16px;border-bottom:1px solid #1e2a24;font:600 12.5px 'Space Grotesk'">Notifications</div>
+    <sc-for list="{{ notifications }}" as="n" hint-placeholder-count="3">
+      <div style="padding:12px 16px;border-bottom:1px solid #16211b">
+        <div style="font:500 12px/1.45 'Space Grotesk'">{{ n.text }}</div>
+        <div style="font:400 10px ui-monospace,monospace;color:#6f8578;margin-top:3px">{{ n.time }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== BADGE MODAL ===================== -->
+<sc-if value="{{ badgeModal }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(4,7,5,.75);backdrop-filter:blur(4px);z-index:80;display:flex;align-items:center;justify-content:center;padding:30px">
+  <div style="width:300px;max-width:100%;background:#101a15;border:1px solid #2f4238;border-radius:20px;padding:28px 24px;text-align:center;animation:fadeUp .4s both">
+    <div style="width:74px;height:74px;border-radius:20px;background:rgba(127,232,168,.12);border:1px solid #2f4238;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 14px;animation:yaPulse 2.2s ease-in-out infinite">🌱</div>
+    <div style="font:700 19px 'Space Grotesk';color:#7fe8a8">Starter badge unlocked</div>
+    <div style="font:400 12.5px/1.6 'Space Grotesk';color:#8fa398;margin:8px 0 18px">Onboarding complete. Your dashboard is live — go earn your first XP.</div>
+    <button onClick="{{ closeBadge }}" style="width:100%;font:600 13.5px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:13px;border-radius:10px;border:none;cursor:pointer">Open dashboard →</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ===================== TOAST ===================== -->
+<sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:50%;bottom:86px;transform:translateX(-50%);z-index:90;background:#13201a;border:1px solid #2f4238;color:#e8efe9;font:500 12.5px 'Space Grotesk';padding:11px 18px;border-radius:999px;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:toastIn .3s both">{{ toast }}</div>
+</sc-if>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 430, &quot;height&quot;: 900}}">
+class Component extends DCLogic {
+  state = {
+    wide: typeof window !== 'undefined' && window.innerWidth >= 900,
+    medium: typeof window !== 'undefined' && window.innerWidth >= 640,
+    narrow: typeof window !== 'undefined' && window.innerWidth < 400,
+    screen: 'home',
+    applyStep: 1,
+    form: {},
+    cvUploaded: false,
+    evidenceUploaded: false,
+    actType: 'Networking / intros',
+    status: 0, // 0 pending 1 review 2 shortlisted 3 selected
+    onboard: { coc: false, wa: false },
+    onboarded: false,
+    badgeModal: false,
+    xp: 720,
+    streak: 6,
+    boardFilter: 'all',
+    adminTab: 'apps',
+    notifOpen: false,
+    toast: null,
+    notifications: [
+      { text: 'Your activity "Campus session — UofT" was approved. +60 XP', time: '2d ago' },
+      { text: 'You moved up 3 places on the leaderboard.', time: '5d ago' },
+      { text: 'New opportunity: YC-style pitch night, Dhaka — share it.', time: '1w ago' },
+    ],
+    activities: [
+      { title: 'Investor intro — TO Angels', cat: 'Networking', date: 'Jun 28', xp: 90, status: 'approved' },
+      { title: 'Campus session — UofT', cat: 'Event', date: 'Jun 14', xp: 60, status: 'approved' },
+      { title: 'Podcast: NRB founders ep. 4', cat: 'Content', date: 'Jul 02', xp: 0, status: 'pending' },
+    ],
+    applicants: [
+      { name: 'Tanvir Ahmed', meta: 'BUET · Dhaka, Bangladesh · Age 22', cgpa: '3.71', merit: 8, state: 'pending' },
+      { name: 'Sabrina Chowdhury', meta: 'NUS · Singapore · NRB · Age 24', cgpa: '3.90', merit: 9, state: 'pending' },
+      { name: 'Rakib Hassan', meta: 'NSU · Dhaka, Bangladesh · Age 21', cgpa: '3.42', merit: 6, state: 'pending' },
+      { name: 'Farhan Kabir', meta: 'TU Munich · Germany · NRB · Age 26', cgpa: '3.65', merit: 7, state: 'shortlisted' },
+    ],
+    review: [
+      { title: 'Podcast: NRB founders ep. 4', meta: 'Nadia Rahman · Content · evidence attached', state: 'PENDING', mine: true },
+      { title: 'Angel dinner — 4 investor intros', meta: 'Sabbir Khan · Networking · impact notes', state: 'PENDING', mine: false },
+      { title: 'Startup story: AgroNext feature', meta: 'Mehnaz Islam · Content · link attached', state: 'PENDING', mine: false },
+    ],
+    feed: [
+      { route: 'Toronto → Dhaka', tag: '+90 XP', text: 'Nadia introduced 2 angel investors to a Dhaka fintech.' },
+      { route: 'London → BUET', tag: '+60 XP', text: 'Rafi ran a research-collab session with Imperial College.' },
+      { route: 'Sydney', tag: 'NEW', text: 'Tasnim published "NRB founders" podcast ep. 4.' },
+    ],
+  };
+
+  go(screen) {
+    if (screen !== 'home' && this._map) { try { this._map.remove(); } catch (e) {} this._map = null; }
+    this.setState({ screen, notifOpen: false });
+    if (screen === 'home') setTimeout(() => this.initHome(), 50);
+  }
+  showToast(msg) {
+    clearTimeout(this._toastT);
+    this.setState({ toast: msg });
+    this._toastT = setTimeout(() => this.setState({ toast: null }), 2600);
+  }
+
+  // ---------- map / home fx ----------
+  componentDidMount() {
+    this.initHome();
+    this._onResize = () => {
+      const wide = window.innerWidth >= 900;
+      const medium = window.innerWidth >= 640;
+      const narrow = window.innerWidth < 400;
+      if (wide !== this.state.wide || medium !== this.state.medium || narrow !== this.state.narrow) {
+        this.setState({ wide, medium, narrow });
+        if (this._map) setTimeout(() => { try { this._map.invalidateSize(); } catch (e) {} }, 350);
+      }
+    };
+    window.addEventListener('resize', this._onResize);
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.screen === 'home' && prevState.screen !== 'home') this.initHome();
+    if (this.state.screen !== 'home' && this._map) { try { this._map.remove(); } catch (e) {} this._map = null; }
+  }
+  componentWillUnmount() { if (this._map) try { this._map.remove(); } catch (e) {} clearTimeout(this._toastT); if (this._onResize) window.removeEventListener('resize', this._onResize); }
+
+  initHome() {
+    // live terminal tail
+    setTimeout(() => {
+      const term = document.getElementById('yaTerm');
+      if (term && !term._live) {
+        term._live = true;
+        const lines = [
+          '> nadia@toronto routed 2 investors → dhaka-fintech  +90XP',
+          '> rafi@london opened research-collab ↔ imperial-college  +60XP',
+          '> tasnim@sydney published nrb-founders.ep4  [review]',
+          '> sabbir@boston logged angel-dinner · 4 intros  [pending]',
+          '> mehnaz@dhaka featured agronext in startup-stories  +55XP',
+          '> new pin registered: qatar · doha  [cohort-2026]',
+        ];
+        let li = 0;
+        const typeLine = () => {
+          if (this.state.screen !== 'home' || !document.getElementById('yaTerm')) return;
+          const line = lines[li % lines.length]; li++;
+          let i = 0;
+          const step = () => {
+            if (this.state.screen !== 'home') return;
+            i += 2;
+            term.textContent = line.slice(0, i);
+            if (i < line.length) setTimeout(step, 22);
+            else setTimeout(typeLine, 2600);
+          };
+          step();
+        };
+        typeLine();
+      }
+      // counters
+      document.querySelectorAll('[data-count]').forEach(c => {
+        if (c._done) return; c._done = true;
+        const raw = c.getAttribute('data-count'), target = parseFloat(raw);
+        const pre = c.getAttribute('data-prefix') || '', suf = c.getAttribute('data-suffix') || '';
+        const dec = (raw.split('.')[1] || '').length;
+        const t0 = performance.now(), dur = 1400;
+        const tick = now => {
+          const p = Math.min(1, (now - t0) / dur);
+          c.textContent = pre + (target * (1 - Math.pow(1 - p, 3))).toFixed(dec) + suf;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+      this.initMap();
+    }, 60);
+  }
+
+  initMap() {
+    const el = document.getElementById('yaMap');
+    if (!el || typeof L === 'undefined' || this._map) return;
+    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const dragging = isTouch && window.innerWidth < 900 ? false : true;
+    const map = L.map(el, { zoomControl: false, attributionControl: false, scrollWheelZoom: false, worldCopyJump: true, dragging: dragging, touchZoom: !dragging }).setView([28, 55], 2);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+    const hint = document.getElementById('yaMapHint');
+    if (hint && isTouch) hint.textContent = 'tap a pin · pinch to move';
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 10, subdomains: 'abcd' }).addTo(map);
+    const pins = [
+      { n: 'Bangladesh', c: [23.7, 90.4], k: 62 }, { n: 'Canada', c: [43.7, -79.4], k: 18 },
+      { n: 'United Kingdom', c: [51.5, -0.12], k: 21 }, { n: 'USA', c: [40.7, -74.0], k: 26 },
+      { n: 'Germany', c: [48.1, 11.6], k: 12 }, { n: 'Australia', c: [-33.9, 151.2], k: 14 },
+      { n: 'Singapore', c: [1.35, 103.8], k: 9 }, { n: 'UAE', c: [25.2, 55.3], k: 11 },
+      { n: 'Malaysia', c: [3.14, 101.7], k: 8 }, { n: 'Japan', c: [35.7, 139.7], k: 6 },
+      { n: 'Sweden', c: [59.3, 18.1], k: 5 }, { n: 'South Korea', c: [37.6, 127.0], k: 4 },
+      { n: 'Netherlands', c: [52.4, 4.9], k: 7 }, { n: 'Qatar', c: [25.3, 51.5], k: 5 },
+    ];
+    pins.forEach(p => {
+      const m = L.circleMarker(p.c, { radius: 4 + Math.sqrt(p.k), color: '#7fe8a8', weight: 1.5, fillColor: '#7fe8a8', fillOpacity: 0.35 }).addTo(map);
+      m.bindPopup('<strong>' + p.n + '</strong><br>' + p.k + ' active ambassadors<br><span style="color:#7fe8a8">Featured stories →</span>');
+      m.on('mouseover', () => m.setStyle({ fillOpacity: 0.7 }));
+      m.on('mouseout', () => m.setStyle({ fillOpacity: 0.35 }));
+    });
+    this._map = map;
+    setTimeout(() => map.invalidateSize(), 300);
+  }
+
+  // ---------- form ----------
+  onFormChange = e => {
+    const form = Object.assign({}, this.state.form);
+    form[e.target.name] = e.target.value;
+    this.setState({ form });
+  };
+
+  renderVals() {
+    const s = this.state;
+    const scr = s.screen;
+    const name = (s.form.name || '').trim() || 'Nadia Rahman';
+    const uni = (s.form.university || '').trim() || 'University of Toronto';
+    const country = (s.form.country || '').trim() || 'Toronto, Canada';
+
+    // status steps
+    const stepDefs = [
+      { title: 'Pending', sub: 'Application received and queued for screening.' },
+      { title: 'Under review', sub: 'Merit-based evaluation by the SBL committee.' },
+      { title: 'Shortlisted', sub: 'You may be invited to an interview or assessment.' },
+      { title: 'Selected', sub: 'Welcome to the cohort — onboarding unlocks.' },
+    ];
+    const statusSteps = stepDefs.map((d, i) => {
+      const done = s.status > i, curr = s.status === i;
+      return {
+        title: d.title, sub: d.sub,
+        mark: done ? '✓' : String(i + 1),
+        dotBg: done || curr ? 'rgba(127,232,168,.14)' : '#101a15',
+        dotBorder: done || curr ? '#2f4238' : '#2a3a32',
+        dotColor: done || curr ? '#7fe8a8' : '#4d6156',
+        titleColor: done || curr ? '#e8efe9' : '#5b6f64',
+        lineDisplay: i < 3 ? 'block' : 'none',
+      };
+    });
+
+    // XP / rank
+    const xp = s.xp;
+    const rank = xp >= 2000 ? 'Regional Lead' : xp >= 1000 ? 'Gold' : xp >= 500 ? 'Silver' : 'Bronze';
+    const nextRank = rank === 'Bronze' ? 'Silver' : rank === 'Silver' ? 'Gold' : 'Regional Lead';
+    const nextAt = rank === 'Bronze' ? 500 : rank === 'Silver' ? 1000 : 2000;
+    const prevAt = rank === 'Bronze' ? 0 : rank === 'Silver' ? 500 : 1000;
+    const xpPct = Math.min(100, Math.round(((xp - prevAt) / (nextAt - prevAt)) * 100));
+
+    const activityRows = s.activities.map(a => ({
+      title: a.title,
+      meta: a.cat + ' · ' + a.date,
+      tag: a.status === 'approved' ? '+' + a.xp + ' XP' : a.status === 'rejected' ? 'Rejected' : 'Review',
+      tagColor: a.status === 'approved' ? '#7fe8a8' : a.status === 'rejected' ? '#d16a4f' : '#e8c15a',
+      tagBorder: a.status === 'approved' ? '#2f4238' : a.status === 'rejected' ? '#472a22' : '#4a3f1e',
+      tagBg: 'transparent',
+    }));
+
+    const badges = [
+      { icon: '🌱', name: 'Starter', unlocked: s.onboarded || true },
+      { icon: '🤝', name: 'Connector', unlocked: true },
+      { icon: '🎤', name: 'Storyteller', unlocked: true },
+      { icon: '📣', name: 'Amplifier', unlocked: true },
+      { icon: '🧭', name: 'Regional scout', unlocked: xp >= 1000 },
+      { icon: '🔒', name: 'Locked', unlocked: false },
+    ].map(b => ({
+      icon: b.unlocked ? b.icon : '🔒', name: b.name,
+      bg: b.unlocked ? '#16241d' : '#111a15',
+      border: b.unlocked ? '#2f4238' : '#22322a',
+      opacity: b.unlocked ? '1' : '.45',
+    }));
+
+    // leaderboard
+    const base = [
+      { name: 'Arif Hossain', meta: 'LSE · London', xp: 1240 },
+      { name: 'Sabrina Chowdhury', meta: 'NUS · Singapore', xp: 1105 },
+      { name: 'Mehnaz Islam', meta: 'DU · Dhaka', xp: 980 },
+      { name: 'Rafi Karim', meta: 'Imperial · London', xp: 915 },
+      { name: 'Tasnim Akter', meta: 'UNSW · Sydney', xp: 860 },
+      { name: 'Sabbir Khan', meta: 'MIT · Boston', xp: 812 },
+      { name: name + ' (you)', meta: uni.split(',')[0] + ' · Toronto', xp: xp, me: true },
+      { name: 'Nusrat Jahan', meta: 'BUET · Dhaka', xp: 640 },
+      { name: 'Imran Chowdhury', meta: 'TUM · Munich', xp: 590 },
+    ];
+    let rows = base;
+    if (s.boardFilter === 'month') rows = base.map(r => Object.assign({}, r, { xp: Math.round(r.xp * 0.18) }));
+    if (s.boardFilter === 'region') rows = base.filter((r, i) => r.me || i % 2 === 0);
+    rows = rows.slice().sort((a, b) => b.xp - a.xp);
+    const myRank = rows.findIndex(r => r.me) + 1;
+    const avCols = ['#7fe8a8', '#4fb8d1', '#e8c15a', '#d16a4f', '#a58ae8'];
+    const boardRows = rows.map((r, i) => ({
+      rank: (i + 1) < 10 ? '0' + (i + 1) : String(i + 1),
+      rankColor: i === 0 ? '#e8c15a' : r.me ? '#7fe8a8' : '#5b6f64',
+      initial: r.name[0],
+      avBg: avCols[i % avCols.length],
+      name: r.name, meta: r.meta,
+      xp: r.xp.toLocaleString('en-US'),
+      xpColor: r.me ? '#7fe8a8' : '#8fa398',
+      bg: r.me ? 'rgba(127,232,168,.06)' : 'transparent',
+    }));
+
+    // rewards tiers
+    const tierDefs = [
+      { name: 'BRONZE', at: 0, perks: ['Official SBL recognition & certificate', 'Community channel access', 'Opportunity feed'] },
+      { name: 'SILVER', at: 500, perks: ['Priority event & workshop access', 'Mentorship session credits', 'Featured on the public map'] },
+      { name: 'GOLD', at: 1000, perks: ['SBL recognition event invite', 'Leadership title & reference letter', 'Delegation shortlists'] },
+      { name: 'REGIONAL LEAD', at: 2000, perks: ['Lead your region\u2019s chapter', 'Direct line to SBL program team', 'International representation slots'] },
+    ];
+    const tiers = tierDefs.map(t => {
+      const unlocked = xp >= t.at;
+      const current = rank.toUpperCase() === t.name;
+      return {
+        name: t.name, perks: t.perks,
+        state: current ? 'CURRENT' : unlocked ? 'UNLOCKED' : 'AT ' + t.at.toLocaleString('en-US') + ' XP',
+        stateColor: current ? '#7fe8a8' : unlocked ? '#8fa398' : '#5b6f64',
+        nameColor: unlocked ? '#7fe8a8' : '#5b6f64',
+        border: current ? '#2f4238' : '#2a3a32',
+        bg: current ? 'linear-gradient(160deg,#13201a,#101a15)' : '#101a15',
+        opacity: unlocked || current ? '1' : '.75',
+      };
+    });
+
+    // admin
+    const applicantRows = s.applicants.map((ap, i) => ({
+      name: ap.name, meta: ap.meta, cgpa: ap.cgpa, merit: ap.merit,
+      state: ap.state.toUpperCase(),
+      stateColor: ap.state === 'approved' ? '#7fe8a8' : ap.state === 'rejected' ? '#d16a4f' : '#e8c15a',
+      stateBorder: ap.state === 'approved' ? '#2f4238' : ap.state === 'rejected' ? '#472a22' : '#4a3f1e',
+      pending: ap.state === 'pending' || ap.state === 'shortlisted',
+      approve: () => this.decideApplicant(i, true),
+      reject: () => this.decideApplicant(i, false),
+    }));
+    const reviewRows = s.review.map((rv, i) => ({
+      title: rv.title, meta: rv.meta, state: rv.state,
+      pending: rv.state === 'PENDING',
+      scoreHigh: () => this.scoreActivity(i, 90),
+      scoreMed: () => this.scoreActivity(i, 55),
+      scoreLow: () => this.scoreActivity(i, 20),
+    }));
+
+    // activity types
+    const typeNames = ['Networking / intros', 'Event / session', 'Content / media', 'Knowledge sharing'];
+    const actTypes = typeNames.map(t => ({
+      label: t,
+      pick: () => this.setState({ actType: t }),
+      color: s.actType === t ? '#0d1411' : '#8fa398',
+      bg: s.actType === t ? '#7fe8a8' : '#101a15',
+      border: s.actType === t ? '#7fe8a8' : '#2a3a32',
+    }));
+
+    const demoOn = k => scr === k || (k === 'home' && scr === 'home');
+    const isAmb = ['dash', 'log', 'board', 'rewards'].includes(scr);
+    const isApplicantView = ['apply', 'applied', 'status', 'onboard'].includes(scr);
+
+    const onboardDone = 1 + (s.onboard.coc ? 1 : 0) + (s.onboard.wa ? 1 : 0);
+    const onboardPct = Math.round((onboardDone / 3) * 100);
+    const onboardLocked = onboardDone < 3;
+
+    const wide = s.wide;
+    const medium = s.medium;
+    const narrow = s.narrow;
+    return {
+      // responsive shell
+      shellMax: wide ? '1040px' : '520px',
+      contentDir: wide ? 'row' : 'column',
+      showRail: isAmb && wide,
+      showBottomNav: isAmb && !wide,
+      formMax: wide ? '640px' : '100%',
+      appMax: wide ? '780px' : '100%',
+      sectionPad: narrow ? '14px' : '22px',
+      sectionMargin: narrow ? '14px' : '22px',
+      howCols: wide ? 'repeat(4,1fr)' : (medium ? '1fr 1fr' : '1fr'),
+      feedCols: wide ? 'repeat(3,1fr)' : (medium ? '1fr 1fr' : '1fr'),
+      statsGridCols: narrow ? '1fr' : '1fr 1fr 1fr',
+      heroTitleSize: wide ? '36px' : (narrow ? '22px' : '28px'),
+      heroBtnDir: medium ? 'row' : 'column',
+      formGridCols: medium ? '1fr 1fr' : '1fr',
+      actGridCols: medium ? '1fr 1fr' : '1fr',
+      demoBtnPad: medium ? '7px 12px' : (narrow ? '4px 6px' : '5px 8px'),
+      demoBtnFont: medium ? '10px' : (narrow ? '8px' : '9px'),
+      bottomNavPad: medium ? '8px 18px' : '8px 10px',
+      mapHeight: wide ? 'clamp(500px,74vh,660px)' : (narrow ? 'clamp(280px,48vh,400px)' : 'clamp(360px,55vh,500px)'),
+      footerDir: narrow ? 'column' : 'row',
+      footerAlign: narrow ? 'center' : 'space-between',
+      ctaMargin: narrow ? '0 14px 24px' : '0 22px 30px',
+      liveFeedPad: narrow ? '20px 14px 8px' : '26px 22px 8px',
+      howPad: narrow ? '16px 14px 20px' : '22px 22px 26px',
+      heroOverlayPad: narrow ? '0 14px 18px' : '0 22px 24px',
+      headerPad: narrow ? '10px 14px' : '14px 20px',
+      // nav / demo
+      isHome: scr === 'home', isApply: scr === 'apply', isApplied: scr === 'applied',
+      isStatus: scr === 'status', isOnboard: scr === 'onboard', isDash: scr === 'dash',
+      isLog: scr === 'log', isBoard: scr === 'board', isRewards: scr === 'rewards', isAdmin: scr === 'admin',
+      showNav: isAmb,
+      goHome: () => this.go('home'), goApply: () => this.go('apply'), goStatus: () => this.go('status'),
+      goOnboard: () => this.go('onboard'), goDash: () => this.go('dash'), goLog: () => this.go('log'),
+      goBoard: () => this.go('board'), goRewards: () => this.go('rewards'),
+      goHomeDemo: () => this.go('home'), goStatusDemo: () => this.go('status'),
+      goDashDemo: () => this.go('dash'), goAdminDemo: () => this.go('admin'),
+      demoVisitorColor: scr === 'home' ? '#0d1411' : '#8fa398', demoVisitorBg: scr === 'home' ? '#7fe8a8' : 'transparent',
+      demoApplicantColor: isApplicantView ? '#0d1411' : '#8fa398', demoApplicantBg: isApplicantView ? '#7fe8a8' : 'transparent',
+      demoAmbColor: isAmb ? '#0d1411' : '#8fa398', demoAmbBg: isAmb ? '#7fe8a8' : 'transparent',
+      demoAdminColor: scr === 'admin' ? '#0d1411' : '#8fa398', demoAdminBg: scr === 'admin' ? '#7fe8a8' : 'transparent',
+      railDashBg: scr === 'dash' ? '#16241d' : 'transparent',
+      railLogBg: scr === 'log' ? '#16241d' : 'transparent',
+      railBoardBg: scr === 'board' ? '#16241d' : 'transparent',
+      railRewBg: scr === 'rewards' ? '#16241d' : 'transparent',
+      navDashColor: scr === 'dash' ? '#7fe8a8' : '#5b6f64',
+      navLogColor: scr === 'log' ? '#7fe8a8' : '#5b6f64',
+      navBoardColor: scr === 'board' ? '#7fe8a8' : '#5b6f64',
+      navRewColor: scr === 'rewards' ? '#7fe8a8' : '#5b6f64',
+
+      // home
+      feed: s.feed,
+
+      // apply
+      isApplyStep1: s.applyStep === 1, isApplyStep2: s.applyStep === 2,
+      applyBar2: s.applyStep === 2 ? '#7fe8a8' : '#1e2a24',
+      onForm: this.onFormChange,
+      applyNext: () => this.setState({ applyStep: 2 }),
+      fakeCv: () => this.setState({ cvUploaded: true }),
+      cvLabel: s.cvUploaded ? '✓ nadia-rahman-cv.pdf (412 KB)' : '⬆ Tap to upload CV',
+      cvColor: s.cvUploaded ? '#7fe8a8' : '#8fa398',
+      applySubmit: () => { this.setState({ screen: 'applied', status: 0 }); this.showToast('Confirmation email sent ✓'); },
+
+      // status
+      applicantName: name, applicantInitial: name[0],
+      applicantMeta: uni + ' · ' + country,
+      statusPill: ['PENDING', 'UNDER REVIEW', 'SHORTLISTED', 'SELECTED'][s.status],
+      statusSteps,
+      isSelected: s.status === 3, notSelected: s.status < 3,
+      advanceStatus: () => {
+        const next = Math.min(3, s.status + 1);
+        this.setState({ status: next });
+        this.showToast(next === 3 ? 'Selected! Your map pin is live 📍' : 'Status: ' + ['Pending', 'Under review', 'Shortlisted', 'Selected'][next]);
+      },
+
+      // onboarding
+      onboardPct, onboardPctW: onboardPct + '%',
+      ackCoc: () => this.setState({ onboard: Object.assign({}, s.onboard, { coc: true }) }),
+      joinWa: () => this.setState({ onboard: Object.assign({}, s.onboard, { wa: true }) }),
+      cocMark: s.onboard.coc ? '✓' : '2', cocAction: s.onboard.coc ? '' : 'Acknowledge',
+      cocBorder: s.onboard.coc ? '#2f4238' : '#2a3a32',
+      cocDotBg: s.onboard.coc ? 'rgba(127,232,168,.15)' : '#0d1411',
+      cocDotColor: s.onboard.coc ? '#7fe8a8' : '#4d6156',
+      waMark: s.onboard.wa ? '✓' : '3', waAction: s.onboard.wa ? '' : 'Join',
+      waBorder: s.onboard.wa ? '#2f4238' : '#2a3a32',
+      waDotBg: s.onboard.wa ? 'rgba(127,232,168,.15)' : '#0d1411',
+      waDotColor: s.onboard.wa ? '#7fe8a8' : '#4d6156',
+      onboardLocked,
+      onboardBtnLabel: onboardLocked ? 'Complete all steps to unlock' : 'Unlock my dashboard 🌱',
+      onboardBtnBg: onboardLocked ? '#1e2a24' : '#7fe8a8',
+      onboardBtnColor: onboardLocked ? '#5b6f64' : '#0d1411',
+      finishOnboard: () => { if (!onboardLocked) this.setState({ onboarded: true, badgeModal: true }); },
+      badgeModal: s.badgeModal,
+      closeBadge: () => this.setState({ badgeModal: false, screen: 'dash' }),
+
+      // dashboard
+      xp, rankUpper: rank.toUpperCase(), nextRankUpper: nextRank.toUpperCase(),
+      xpToNext: (nextAt - xp).toLocaleString('en-US'), xpPctW: xpPct + '%',
+      streak: s.streak,
+      approvedCount: s.activities.filter(a => a.status === 'approved').length,
+      badgeCount: badges.filter(b => b.opacity === '1').length,
+      badges, activityRows, myRank,
+      toggleNotif: () => this.setState({ notifOpen: !s.notifOpen }),
+      notifOpen: s.notifOpen, notifications: s.notifications,
+      hasNotifs: s.notifications.length > 0, notifCount: s.notifications.length,
+
+      // log
+      actTypes,
+      fakeEvidence: () => this.setState({ evidenceUploaded: true }),
+      evLabel: s.evidenceUploaded ? '✓ evidence-screenshot.png attached' : '⬆ Attach link, photo or document',
+      evColor: s.evidenceUploaded ? '#7fe8a8' : '#8fa398',
+      submitActivity: () => {
+        const desc = (s.form.actDesc || '').trim();
+        const title = desc ? (desc.length > 34 ? desc.slice(0, 34) + '…' : desc) : s.actType + ' — new entry';
+        const activities = [{ title, cat: s.actType.split(' ')[0], date: 'Jul 12', xp: 0, status: 'pending' }].concat(s.activities);
+        const review = [{ title, meta: name + ' · ' + s.actType + ' · just now', state: 'PENDING', mine: true }].concat(s.review);
+        this.setState({ activities, review, screen: 'dash', evidenceUploaded: false });
+        this.showToast('Submitted — pending review');
+      },
+
+      // leaderboard
+      boardRows,
+      filterAll: () => this.setState({ boardFilter: 'all' }),
+      filterMonth: () => this.setState({ boardFilter: 'month' }),
+      filterRegion: () => this.setState({ boardFilter: 'region' }),
+      fAllColor: s.boardFilter === 'all' ? '#0d1411' : '#8fa398', fAllBg: s.boardFilter === 'all' ? '#7fe8a8' : 'transparent',
+      fMonColor: s.boardFilter === 'month' ? '#0d1411' : '#8fa398', fMonBg: s.boardFilter === 'month' ? '#7fe8a8' : 'transparent',
+      fRegColor: s.boardFilter === 'region' ? '#0d1411' : '#8fa398', fRegBg: s.boardFilter === 'region' ? '#7fe8a8' : 'transparent',
+
+      // rewards
+      tiers,
+
+      // admin
+      tabApps: () => this.setState({ adminTab: 'apps' }),
+      tabActs: () => this.setState({ adminTab: 'acts' }),
+      isTabApps: s.adminTab === 'apps', isTabActs: s.adminTab === 'acts',
+      tAppsColor: s.adminTab === 'apps' ? '#e8efe9' : '#5b6f64', tAppsBg: s.adminTab === 'apps' ? '#16241d' : 'transparent',
+      tActsColor: s.adminTab === 'acts' ? '#e8efe9' : '#5b6f64', tActsBg: s.adminTab === 'acts' ? '#16241d' : 'transparent',
+      pendingAppCount: s.applicants.filter(a => a.state === 'pending' || a.state === 'shortlisted').length,
+      pendingActCount: s.review.filter(r => r.state === 'PENDING').length,
+      applicantRows, reviewRows,
+
+      // toast
+      toast: s.toast, hasToast: !!s.toast,
+    };
+  }
+
+  decideApplicant(i, ok) {
+    const applicants = this.state.applicants.map((a, j) => j === i ? Object.assign({}, a, { state: ok ? 'approved' : 'rejected' }) : a);
+    this.setState({ applicants });
+    this.showToast(ok ? 'Approved — applicant notified, pin activated 📍' : 'Rejected — applicant notified');
+  }
+
+  scoreActivity(i, pts) {
+    const s = this.state;
+    const rv = s.review[i];
+    const review = s.review.map((r, j) => j === i ? Object.assign({}, r, { state: 'SCORED · +' + pts }) : r);
+    let activities = s.activities, xp = s.xp, notifications = s.notifications;
+    if (rv.mine) {
+      activities = s.activities.map(a => a.title === rv.title ? Object.assign({}, a, { status: 'approved', xp: pts }) : a);
+      xp = s.xp + pts;
+      notifications = [{ text: 'Activity approved: "' + rv.title + '" · +' + pts + ' XP', time: 'just now' }].concat(s.notifications);
+    }
+    this.setState({ review, activities, xp, notifications });
+    this.showToast('Scored +' + pts + ' XP' + (rv.mine ? ' — ambassador notified' : ''));
+  }
+}
+</script>
+</body>
+</html>
