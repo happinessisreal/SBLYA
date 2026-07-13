@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+er i<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -89,7 +89,7 @@ input:focus,select:focus,textarea:focus{border-color:#7fe8a8 !important}
   </div>
 
   <!-- MAP-FIRST HERO: the world map IS the homepage -->
-  <div style="position:relative;height:{{ mapHeight }};overflow:hidden;background:#0a120e">
+  <div style="position:relative;height:{{ mapHeight }};overflow:hidden;background:#0a120e;touch-action:{{ mapTouchAction }}">
     <div id="yaMap" style="position:absolute;inset:0;z-index:1"></div>
     <div style="position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(13,20,17,.7) 0%,rgba(13,20,17,.12) 30%,rgba(13,20,17,.18) 52%,rgba(13,20,17,.93) 80%,#0d1411 100%)"></div>
     <div style="position:absolute;left:0;right:0;top:12px;z-index:3;pointer-events:none;display:flex;justify-content:center">
@@ -707,9 +707,20 @@ class Component extends DCLogic {
     const el = document.getElementById('yaMap');
     if (!el || typeof L === 'undefined' || this._map) return;
     const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-    const dragging = isTouch && window.innerWidth < 900 ? false : true;
-    const map = L.map(el, { zoomControl: false, attributionControl: false, scrollWheelZoom: false, worldCopyJump: true, dragging: dragging, touchZoom: !dragging }).setView([28, 55], 2);
-    L.control.zoom({ position: 'topleft' }).addTo(map);
+    const mobileTouch = isTouch && window.innerWidth < 900;
+    const map = L.map(el, {
+      zoomControl: false,
+      attributionControl: false,
+      scrollWheelZoom: false,
+      worldCopyJump: true,
+      dragging: !mobileTouch,
+      touchZoom: !mobileTouch,
+      doubleClickZoom: !mobileTouch,
+      boxZoom: !mobileTouch,
+      keyboard: !mobileTouch,
+      tap: true,
+    }).setView([28, 55], 2);
+    if (!mobileTouch) L.control.zoom({ position: 'topleft' }).addTo(map);
     const hint = document.getElementById('yaMapHint');
     if (hint && isTouch) hint.textContent = 'tap a pin · pinch to move';
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 10, subdomains: 'abcd' }).addTo(map);
@@ -907,6 +918,7 @@ class Component extends DCLogic {
       demoBtnFont: medium ? '10px' : (narrow ? '8px' : '9px'),
       bottomNavPad: medium ? '8px 18px' : '8px 10px',
       mapHeight: wide ? 'clamp(500px,74vh,660px)' : (narrow ? 'clamp(280px,48vh,400px)' : 'clamp(360px,55vh,500px)'),
+      mapTouchAction: wide ? 'manipulation' : 'pan-y',
       footerDir: narrow ? 'column' : 'row',
       footerAlign: narrow ? 'center' : 'space-between',
       ctaMargin: narrow ? '0 14px 24px' : '0 22px 30px',
