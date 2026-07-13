@@ -1,4 +1,4 @@
-er i<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -88,23 +88,16 @@ input:focus,select:focus,textarea:focus{border-color:#7fe8a8 !important}
     </div>
   </div>
 
-  <!-- MAP-FIRST HERO: the world map IS the homepage -->
-  <div style="position:relative;height:{{ mapHeight }};overflow:hidden;background:#0a120e;touch-action:{{ mapTouchAction }}">
-    <div id="yaMap" style="position:absolute;inset:0;z-index:1"></div>
-    <div style="position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(13,20,17,.7) 0%,rgba(13,20,17,.12) 30%,rgba(13,20,17,.18) 52%,rgba(13,20,17,.93) 80%,#0d1411 100%)"></div>
-    <div style="position:absolute;left:0;right:0;top:12px;z-index:3;pointer-events:none;display:flex;justify-content:center">
-      <span style="display:inline-flex;gap:7px;align-items:center;font:500 10px ui-monospace,monospace;letter-spacing:.06em;color:#7fe8a8;background:rgba(10,18,14,.75);border:1px solid #2f4238;padding:6px 13px;border-radius:999px;backdrop-filter:blur(6px)"><span style="width:6px;height:6px;border-radius:50%;background:#7fe8a8;animation:yaBlink 1.4s step-end infinite"></span>LIVE · 214 AMBASSADORS · 38 COUNTRIES</span>
+  <!-- COMPACT HERO (no map — map is a separate screen) -->
+  <div style="padding:32px 20px 28px;background:linear-gradient(180deg,#0a120e,#0d1411);border-bottom:1px solid #1e2a24;text-align:center">
+    <div style="font:500 11px ui-monospace,monospace;color:#9fb3a8;margin-bottom:10px;animation:fadeUp .6s both">$ ya --join cohort-2026</div>
+    <div style="font:700 {{ heroTitleSize }}/1.15 'Space Grotesk';letter-spacing:-.02em;animation:fadeUp .7s .15s both">The global signal layer for <span style="color:#7fe8a8">Bangladesh's startups</span></div>
+    <p style="font:400 13.5px/1.6 'Space Grotesk';color:#b8c5bd;margin:12px 0 22px;max-width:400px;margin-left:auto;margin-right:auto;animation:fadeUp .7s .3s both">Route capital, mentorship and market access back home — from wherever you are.</p>
+    <div style="display:flex;flex-direction:{{ heroBtnDir }};gap:10px;justify-content:center;animation:fadeUp .7s .45s both">
+      <button onClick="{{ goApply }}" style="font:600 14px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:13px 20px;border-radius:10px;border:none;cursor:pointer;animation:yaPulse 2.6s ease-in-out infinite">Become an ambassador</button>
+      <button onClick="{{ goStatus }}" style="font:500 14px 'Space Grotesk';color:#e8efe9;padding:13px 16px;border:1px solid #3a5245;border-radius:10px;background:rgba(10,18,14,.6);backdrop-filter:blur(6px);cursor:pointer">Sign in</button>
     </div>
-    <div id="yaMapHint" style="position:absolute;right:14px;top:46%;z-index:3;pointer-events:none;font:500 9.5px ui-monospace,monospace;color:rgba(143,163,152,.75);background:rgba(10,18,14,.6);padding:4px 9px;border-radius:6px;backdrop-filter:blur(4px)">drag · tap a pin</div>
-    <div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:{{ heroOverlayPad }};pointer-events:none">
-      <div style="font:500 11px ui-monospace,monospace;color:#9fb3a8;margin-bottom:10px;animation:fadeUp .6s both">$ ya --join cohort-2026</div>
-      <div style="font:700 {{ heroTitleSize }}/1.1 'Space Grotesk';letter-spacing:-.02em;text-shadow:0 2px 28px rgba(0,0,0,.7);animation:fadeUp .7s .15s both">The global signal layer for <span style="color:#7fe8a8">Bangladesh's startups</span></div>
-      <p style="font:400 13.5px/1.6 'Space Grotesk';color:#b8c5bd;margin:12px 0 18px;max-width:340px;text-shadow:0 1px 12px rgba(0,0,0,.7);animation:fadeUp .7s .3s both">Route capital, mentorship and market access back home — from wherever you are.</p>
-      <div style="display:flex;flex-direction:{{ heroBtnDir }};gap:10px;pointer-events:auto;animation:fadeUp .7s .45s both">
-        <button onClick="{{ goApply }}" style="font:600 14px 'Space Grotesk';color:#0d1411;background:#7fe8a8;padding:13px 20px;border-radius:10px;border:none;cursor:pointer;animation:yaPulse 2.6s ease-in-out infinite">Become an ambassador</button>
-        <button onClick="{{ goStatus }}" style="font:500 14px 'Space Grotesk';color:#e8efe9;padding:13px 16px;border:1px solid #3a5245;border-radius:10px;background:rgba(10,18,14,.6);backdrop-filter:blur(6px);cursor:pointer">Sign in</button>
-      </div>
-    </div>
+    <button onClick="{{ goMap }}" style="margin-top:18px;font:600 12.5px 'Space Grotesk';color:#7fe8a8;background:transparent;border:1px solid #2f4238;border-radius:999px;padding:9px 18px;cursor:pointer;display:inline-flex;gap:6px;align-items:center"><span>🌍</span> Explore the network →</button>
   </div>
 
   <!-- LIVE TERMINAL STRIP -->
@@ -526,6 +519,24 @@ input:focus,select:focus,textarea:focus{border-color:#7fe8a8 !important}
 </div>
 </sc-if>
 
+<!-- ===================== MAP EXPLORER ===================== -->
+<sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Map" style="flex:1;overflow:hidden;background:#0a120e;position:relative">
+  <div style="position:absolute;top:14px;left:14px;z-index:10">
+    <button onClick="{{ goHome }}" style="font:500 13px 'Space Grotesk';color:#e8efe9;background:rgba(10,18,14,.8);backdrop-filter:blur(8px);border:1px solid #2a3a32;border-radius:10px;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px">← Back</button>
+  </div>
+  <div style="position:absolute;left:0;right:0;top:14px;z-index:10;pointer-events:none;display:flex;justify-content:center">
+    <span style="display:inline-flex;gap:7px;align-items:center;font:500 10px ui-monospace,monospace;letter-spacing:.06em;color:#7fe8a8;background:rgba(10,18,14,.8);border:1px solid #2f4238;padding:6px 13px;border-radius:999px;backdrop-filter:blur(8px);pointer-events:none"><span style="width:6px;height:6px;border-radius:50%;background:#7fe8a8;animation:yaBlink 1.4s step-end infinite"></span>LIVE · 214 AMBASSADORS · 38 COUNTRIES</span>
+  </div>
+  <div id="yaMap" style="position:absolute;inset:0;z-index:1"></div>
+  <div id="yaMapHint" style="position:absolute;right:14px;top:46%;z-index:3;pointer-events:none;font:500 9.5px ui-monospace,monospace;color:rgba(143,163,152,.75);background:rgba(10,18,14,.6);padding:4px 9px;border-radius:6px;backdrop-filter:blur(4px)">drag · tap a pin</div>
+  <div style="position:absolute;left:0;right:0;bottom:0;z-index:3;pointer-events:none;padding:0 22px 20px">
+    <div style="font:700 20px/1.15 'Space Grotesk';text-shadow:0 2px 20px rgba(0,0,0,.7)">The global network</div>
+    <div style="font:400 12px/1.5 'Space Grotesk';color:#8fa398;margin-top:4px;text-shadow:0 1px 10px rgba(0,0,0,.7)">Tap a pin to see who's active in each country.</div>
+  </div>
+</div>
+</sc-if>
+
 <!-- ===================== BOTTOM NAV (ambassador) ===================== -->
 <sc-if value="{{ showBottomNav }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;justify-content:space-around;border-top:1px solid #1e2a24;padding:10px 8px calc(12px + env(safe-area-inset-bottom));background:#0b100d;position:sticky;bottom:0;z-index:30">
@@ -625,9 +636,10 @@ class Component extends DCLogic {
   };
 
   go(screen) {
-    if (screen !== 'home' && this._map) { try { this._map.remove(); } catch (e) {} this._map = null; }
+    if (!['home', 'map'].includes(screen) && this._map) { try { this._map.remove(); } catch (e) {} this._map = null; }
     this.setState({ screen, notifOpen: false });
     if (screen === 'home') setTimeout(() => this.initHome(), 50);
+    if (screen === 'map') setTimeout(() => this.initMap(), 50);
   }
   showToast(msg) {
     clearTimeout(this._toastT);
@@ -651,7 +663,8 @@ class Component extends DCLogic {
   }
   componentDidUpdate(prevProps, prevState) {
     if (this.state.screen === 'home' && prevState.screen !== 'home') this.initHome();
-    if (this.state.screen !== 'home' && this._map) { try { this._map.remove(); } catch (e) {} this._map = null; }
+    if (this.state.screen === 'map' && prevState.screen !== 'map') this.initMap();
+    if (!['home', 'map'].includes(this.state.screen) && this._map) { try { this._map.remove(); } catch (e) {} this._map = null; }
   }
   componentWillUnmount() { if (this._map) try { this._map.remove(); } catch (e) {} clearTimeout(this._toastT); if (this._onResize) window.removeEventListener('resize', this._onResize); }
 
@@ -707,20 +720,19 @@ class Component extends DCLogic {
     const el = document.getElementById('yaMap');
     if (!el || typeof L === 'undefined' || this._map) return;
     const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-    const mobileTouch = isTouch && window.innerWidth < 900;
     const map = L.map(el, {
       zoomControl: false,
       attributionControl: false,
       scrollWheelZoom: false,
       worldCopyJump: true,
-      dragging: !mobileTouch,
-      touchZoom: !mobileTouch,
-      doubleClickZoom: !mobileTouch,
-      boxZoom: !mobileTouch,
-      keyboard: !mobileTouch,
+      dragging: true,
+      touchZoom: true,
+      doubleClickZoom: true,
+      boxZoom: false,
+      keyboard: true,
       tap: true,
     }).setView([28, 55], 2);
-    if (!mobileTouch) L.control.zoom({ position: 'topleft' }).addTo(map);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
     const hint = document.getElementById('yaMapHint');
     if (hint && isTouch) hint.textContent = 'tap a pin · pinch to move';
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 10, subdomains: 'abcd' }).addTo(map);
@@ -933,7 +945,7 @@ class Component extends DCLogic {
       showNav: isAmb,
       goHome: () => this.go('home'), goApply: () => this.go('apply'), goStatus: () => this.go('status'),
       goOnboard: () => this.go('onboard'), goDash: () => this.go('dash'), goLog: () => this.go('log'),
-      goBoard: () => this.go('board'), goRewards: () => this.go('rewards'),
+      goBoard: () => this.go('board'), goRewards: () => this.go('rewards'), goMap: () => this.go('map'),
       goHomeDemo: () => this.go('home'), goStatusDemo: () => this.go('status'),
       goDashDemo: () => this.go('dash'), goAdminDemo: () => this.go('admin'),
       demoVisitorColor: scr === 'home' ? '#0d1411' : '#8fa398', demoVisitorBg: scr === 'home' ? '#7fe8a8' : 'transparent',
